@@ -52,6 +52,45 @@
       display: none;
     }
 
+    .buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    button, a {
+      border: none;
+      background: #ff4da6;
+      color: white;
+      padding: 14px 18px;
+      border-radius: 999px;
+      font-size: 16px;
+      text-decoration: none;
+      cursor: pointer;
+      min-width: 120px;
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    #saveBtn {
+      display: none;
+    }
+
+    #result {
+      margin-top: 20px;
+    }
+
+    #result img {
+      width: 100%;
+      border-radius: 16px;
+      display: block;
+      border: 10px solid #ff4da6;
+      box-sizing: border-box;
+    }
+
     .editor-box {
       margin-top: 16px;
       padding: 14px;
@@ -94,49 +133,6 @@
       accent-color: #ff4da6;
     }
 
-    .buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    button, a {
-      border: none;
-      background: #ff4da6;
-      color: white;
-      padding: 14px 18px;
-      border-radius: 999px;
-      font-size: 16px;
-      text-decoration: none;
-      cursor: pointer;
-      min-width: 120px;
-      -webkit-appearance: none;
-      appearance: none;
-      touch-action: manipulation;
-    }
-
-    .sub-button {
-      background: #ff85bf;
-    }
-
-    #saveBtn {
-      display: none;
-    }
-
-    #result {
-      margin-top: 20px;
-    }
-
-    #result img {
-      width: 100%;
-      border-radius: 16px;
-      display: block;
-      border: 10px solid #ff4da6;
-      box-sizing: border-box;
-    }
-
     .note {
       font-size: 12px;
       color: #666;
@@ -152,7 +148,7 @@
 <body>
   <div class="container">
     <h1>かんたんカメラ</h1>
-    <p>撮影したあとに編集して、編集後の写真を保存できます。</p>
+    <p>撮影したあと、編集内容がリアルタイムで反映されます。</p>
 
     <div class="camera-box">
       <video id="video" autoplay playsinline muted></video>
@@ -164,30 +160,26 @@
       <a id="saveBtn" href="#" download="edited-heisei-purikura.png">保存</a>
     </div>
 
-    <canvas id="canvas"></canvas>
+    anvas id="canvas"></canvas>
 
     <div id="result"></div>
 
     <div id="editorBox" class="editor-box">
       <h2>編集</h2>
 
-      <label for="editMode">フィルター</label>
+      abel for="editMode">フィルター</label>
       <select id="editMode">
         <option value="normal">ノーマル</option>
         <option value="pink">ピンク</option>
       </select>
 
-      <label for="brightnessRange">
+      abel for="brightnessRange">
         明るさ: <span id="brightnessValue" class="value-text">100</span>
       </label>
       <input type="range" id="brightnessRange" min="80" max="130" value="100">
-
-      <div class="buttons">
-        <button id="applyEditBtn" type="button" class="sub-button">編集を反映</button>
-      </div>
     </div>
 
-    <div class="note">※ まず撮影してから編集してください。</div>
+    <div class="note">※ 撮影後にモードや明るさを変えると、写真がその場で変わります。</div>
   </div>
 
   <script>
@@ -202,15 +194,10 @@
     const editMode = document.getElementById("editMode");
     const brightnessRange = document.getElementById("brightnessRange");
     const brightnessValue = document.getElementById("brightnessValue");
-    const applyEditBtn = document.getElementById("applyEditBtn");
 
     let stream = null;
     let originalPhotoData = null;
     let currentEditedData = null;
-
-    brightnessRange.addEventListener("input", function () {
-      brightnessValue.textContent = brightnessRange.value;
-    });
 
     async function waitForVideoReady() {
       if (video.readyState >= 2 && video.videoWidth > 0) return;
@@ -259,6 +246,7 @@
         ctx.clearRect(0, 0, width, height);
 
         let filterText = "brightness(" + (Number(brightnessRange.value) / 100) + ")";
+
         if (editMode.value === "pink") {
           filterText += " saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
         }
@@ -325,37 +313,28 @@
 
         originalPhotoData = canvas.toDataURL("image/png");
 
-        const previewImg = new Image();
-        previewImg.onload = function () {
-          canvas.width = previewImg.width;
-          canvas.height = previewImg.height;
+        editorBox.style.display = "block";
+        editMode.value = "normal";
+        brightnessRange.value = "100";
+        brightnessValue.textContent = "100";
 
-          const previewCtx = canvas.getContext("2d");
-          previewCtx.clearRect(0, 0, canvas.width, canvas.height);
-          previewCtx.drawImage(previewImg, 0, 0);
-          drawDecorations(previewCtx, canvas.width, canvas.height);
-
-          currentEditedData = canvas.toDataURL("image/png");
-          showImage(currentEditedData);
-          saveBtn.href = currentEditedData;
-          saveBtn.style.display = "inline-block";
-          editorBox.style.display = "block";
-          editMode.value = "normal";
-          brightnessRange.value = "100";
-          brightnessValue.textContent = "100";
-        };
-        previewImg.src = originalPhotoData;
+        renderEditedFromOriginal();
       } catch (error) {
         alert("撮影に失敗しました");
       }
     });
 
-    applyEditBtn.addEventListener("click", function () {
-      if (!originalPhotoData) {
-        alert("先に写真を撮影してください");
-        return;
+    editMode.addEventListener("change", function () {
+      if (originalPhotoData) {
+        renderEditedFromOriginal();
       }
-      renderEditedFromOriginal();
+    });
+
+    brightnessRange.addEventListener("input", function () {
+      brightnessValue.textContent = brightnessRange.value;
+      if (originalPhotoData) {
+        renderEditedFromOriginal();
+      }
     });
   </script>
 </body>
