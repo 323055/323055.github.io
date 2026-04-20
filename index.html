@@ -36,7 +36,7 @@
       border-radius: 16px;
       overflow: hidden;
       margin-bottom: 16px;
-      border: 14px solid #ff4da6;
+      border: 10px solid #ff4da6;
       box-sizing: border-box;
     }
 
@@ -84,19 +84,11 @@
       margin-top: 20px;
     }
 
-    .result-title {
-      color: #ff4da6;
-      font-size: 24px;
-      font-weight: 900;
-      margin-bottom: 10px;
-      letter-spacing: 1px;
-    }
-
     #result img {
       width: 100%;
       border-radius: 16px;
       display: block;
-      border: 14px solid #ff4da6;
+      border: 10px solid #ff4da6;
       box-sizing: border-box;
     }
 
@@ -110,7 +102,7 @@
 <body>
   <div class="container">
     <h1>かんたんカメラ</h1>
-    <p>まずは写真を撮って保存できるところまで作ります。</p>
+    <p>写真にピンクの枠と文字を入れて保存します。</p>
 
     <div class="camera-box">
       <video id="video" autoplay playsinline muted></video>
@@ -119,13 +111,13 @@
     <div class="buttons">
       <button id="startBtn" type="button">カメラ開始</button>
       <button id="shotBtn" type="button">撮影</button>
-      <a id="saveBtn" href="#" download="photo.png">保存</a>
+      <a id="saveBtn" href="#" download="heisei-purikura.png">保存</a>
     </div>
 
     <canvas id="canvas"></canvas>
 
     <div id="result"></div>
-    <div class="note">※ 今回は壊れにくさ優先で、文字は画像の上に重ねず別表示です。</div>
+    <div class="note">※ 今回は保存画像にも枠と文字が入ります。</div>
   </div>
 
   <script>
@@ -193,16 +185,27 @@
 
         const ctx = canvas.getContext("2d");
 
+        ctx.clearRect(0, 0, width, height);
+
         ctx.save();
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
 
+        ctx.strokeStyle = "#ff4da6";
+        ctx.lineWidth = Math.max(12, width * 0.02);
+        ctx.strokeRect(0, 0, width, height);
+
+        ctx.fillStyle = "#ff4da6";
+        ctx.font = "bold " + Math.max(24, width * 0.055) + "px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
+
         const imageData = canvas.toDataURL("image/png");
 
         result.innerHTML =
-          '<div class="result-title">HEISEI PURIKURA</div>' +
           '<img src="' + imageData + '" alt="撮影した写真">';
 
         saveBtn.href = imageData;
