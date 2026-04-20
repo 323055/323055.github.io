@@ -110,10 +110,10 @@
       <a id="saveBtn" href="#" download="photo.png">保存</a>
     </div>
 
-    <canvas id="canvas"></canvas>
+    anvas id="canvas"></canvas>
 
     <div id="result"></div>
-    <div class="note">※ ボタンが押せない場合は、まずこのシンプル版で動作確認します。</div>
+    <div class="note">※ 先に「カメラ開始」を押してから撮影してください。</div>
   </div>
 
   <script>
@@ -186,6 +186,10 @@
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
+
+        ctx.strokeStyle = "#ff4da6";
+        ctx.lineWidth = Math.max(20, width * 0.03);
+        ctx.strokeRect(0, 0, width, height);
 
         const imageData = canvas.toDataURL("image/png");
         result.innerHTML = '<img src="' + imageData + '" alt="撮影した写真">';
