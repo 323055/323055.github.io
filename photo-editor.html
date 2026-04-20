@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>photo-editor</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem;
+      --color-bg: #f7f6f2; --color-surface: #fbfbf9; --color-surface-2: #f3f0ec; --color-border: #d4d1ca; --color-text: #28251d; --color-text-muted: #7a7974; --color-primary: #01696f; --color-primary-hover: #0c4e54; --color-primary-highlight: #cedcd8;
+      --radius-md: 0.75rem; --radius-lg: 1rem; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.06); --shadow-md: 0 8px 24px rgba(0,0,0,.08);
+      --font-body: 'Satoshi', system-ui, sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #22211f; --color-border: #393836; --color-text: #cdccca; --color-text-muted: #9a9995; --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-primary-highlight: #313b3b;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.2); --shadow-md: 0 8px 24px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: none; text-size-adjust: none; }
+    body {
+      min-height: 100dvh; font-family: var(--font-body); font-size: var(--text-base); line-height: 1.6;
+      color: var(--color-text); background: linear-gradient(180deg, var(--color-bg), var(--color-surface-2));
+    }
+    button, input { font: inherit; }
+    button { border: 0; background: none; color: inherit; }
+    .app { max-width: 980px; margin: 0 auto; padding: var(--space-4); display: grid; gap: var(--space-4); }
+    .topbar, .panel {
+      background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+      border: 1px solid rgba(120,120,120,.16); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(10px);
+    }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-4); }
+    .brand h1 { font-size: var(--text-xl); line-height: 1.1; }
+    .brand p { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .theme-toggle, .action, .secondary {
+      min-height: 44px; border-radius: var(--radius-full); padding: 0 var(--space-4); cursor:pointer;
+    }
+    .theme-toggle, .secondary { border:1px solid var(--color-border); background: var(--color-surface); }
+    .action { background: var(--color-primary); color: #fff; font-weight: 700; }
+    .action:hover { background: var(--color-primary-hover); }
+    .layout { display:grid; gap: var(--space-4); }
+    .panel { padding: var(--space-4); }
+    .controls { display:grid; gap: var(--space-4); }
+    .picker { display:flex; flex-wrap:wrap; gap: var(--space-3); }
+    .file-label {
+      display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 var(--space-4);
+      border-radius: var(--radius-full); background: var(--color-primary); color:#fff; font-weight:700; cursor:pointer;
+    }
+    .file-label.alt { background: var(--color-surface-2); color: var(--color-text); border:1px solid var(--color-border); }
+    input[type="file"] { display:none; }
+    .hint { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .sliders { display:grid; gap: var(--space-3); }
+    .slider-row { display:grid; gap: var(--space-2); }
+    .slider-head { display:flex; justify-content:space-between; gap: var(--space-3); font-size: var(--text-sm); }
+    input[type="range"] { width:100%; accent-color: var(--color-primary); }
+    .stage {
+      display:grid; gap: var(--space-3);
+    }
+    .canvas-wrap {
+      background:#111; border-radius: var(--radius-lg); overflow:hidden; min-height: 320px; display:grid; place-items:center;
+      border: 1px solid rgba(120,120,120,.16);
+    }
+    canvas { width:100%; height:auto; display:block; }
+    .empty { color:#ddd; padding: var(--space-8); text-align:center; }
+    .toolbar { display:flex; flex-wrap:wrap; gap: var(--space-3); }
+    .chips { display:flex; flex-wrap:wrap; gap: var(--space-2); }
+    .chip {
+      min-height:40px; padding: 0 var(--space-3); border-radius: var(--radius-full); border:1px solid var(--color-border);
+      background: var(--color-surface); cursor:pointer;
+    }
+    .chip.active { background: var(--color-primary-highlight); border-color: transparent; }
+    .grid2 { display:grid; gap: var(--space-4); }
+    .status { font-size: var(--text-sm); color: var(--color-text-muted); }
+    .footer-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+    @media (min-width: 860px) {
+      .layout { grid-template-columns: 340px 1fr; align-items:start; }
+      .app { padding: var(--space-6); }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior:auto; transition:none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>写真エディタ</h1>
+        <p>カメラ起動失敗を避けるため、撮影または写真選択 → その場で編集 → 保存する方式です。</p>
+      </div>
+      <button class="theme-toggle secondary" type="button" data-theme-toggle aria-label="テーマ切替">🌙</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel controls">
+        <div>
+          <div class="picker">
+            <label class="file-label" for="captureInput">撮る / 選ぶ</label>
+            <label class="file-label alt" for="galleryInput">写真ライブラリ</label>
+          </div>
+          <input id="captureInput" type="file" accept="image/*" capture="environment">
+          <input id="galleryInput" type="file" accept="image/*">
+          <p class="hint">iPhoneやAndroidでは、撮影か既存写真の選択UIが出ることがあります。`capture` は撮影を促す属性です [web:698][web:700][web:705]。</p>
+        </div>
+
+        <div>
+          <div class="chips" id="filterChips">
+            <button class="chip active" data-filter="normal" type="button">標準</button>
+            <button class="chip" data-filter="mono" type="button">モノクロ</button>
+            <button class="chip" data-filter="warm" type="button">あたたかめ</button>
+            <button class="chip" data-filter="cool" type="button">さむめ</button>
+            <button class="chip" data-filter="vivid" type="button">くっきり</button>
+          </div>
+        </div>
+
+        <div class="sliders">
+          <div class="slider-row">
+            <div class="slider-head"><span>明るさ</span><span id="brightnessVal">100%</span></div>
+            <input id="brightness" type="range" min="50" max="150" value="100">
+          </div>
+          <div class="slider-row">
+            <div class="slider-head"><span>コントラスト</span><span id="contrastVal">100%</span></div>
+            <input id="contrast" type="range" min="50" max="180" value="100">
+          </div>
+          <div class="slider-row">
+            <div class="slider-head"><span>彩度</span><span id="saturationVal">100%</span></div>
+            <input id="saturation" type="range" min="0" max="200" value="100">
+          </div>
+          <div class="slider-row">
+            <div class="slider-head"><span>ぼかし</span><span id="blurVal">0px</span></div>
+            <input id="blur" type="range" min="0" max="8" value="0">
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="secondary" id="rotateBtn" type="button">90°回転</button>
+          <button class="secondary" id="flipBtn" type="button">左右反転</button>
+          <button class="secondary" id="resetBtn" type="button">リセット</button>
+          <button class="action" id="saveBtn" type="button">保存</button>
+        </div>
+
+        <p class="footer-note">`input type="file"` に `accept="image/*"` を付ける方法は広く使え、モバイルでは撮影や既存画像の選択へつながることがあります [web:705][web:700]。</p>
+      </section>
+
+      <section class="panel stage">
+        <div class="canvas-wrap">
+          <canvas id="canvas"></canvas>
+          <div class="empty" id="emptyState">ここに写真が表示されます</div>
+        </div>
+        <p class="status" id="status">まだ画像が読み込まれていません。</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const toggle = document.querySelector('[data-theme-toggle]');
+      let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const setTheme = () => {
+        root.setAttribute('data-theme', theme);
+        toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+      };
+      setTheme();
+      toggle.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; setTheme(); });
+
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const emptyState = document.getElementById('emptyState');
+      const status = document.getElementById('status');
+      const captureInput = document.getElementById('captureInput');
+      const galleryInput = document.getElementById('galleryInput');
+      const brightness = document.getElementById('brightness');
+      const contrast = document.getElementById('contrast');
+      const saturation = document.getElementById('saturation');
+      const blur = document.getElementById('blur');
+      const brightnessVal = document.getElementById('brightnessVal');
+      const contrastVal = document.getElementById('contrastVal');
+      const saturationVal = document.getElementById('saturationVal');
+      const blurVal = document.getElementById('blurVal');
+      const rotateBtn = document.getElementById('rotateBtn');
+      const flipBtn = document.getElementById('flipBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const chips = [...document.querySelectorAll('.chip')];
+
+      let image = null;
+      let objectUrl = null;
+      let rotation = 0;
+      let flipped = false;
+      let activeFilter = 'normal';
+      const base = { brightness: 100, contrast: 100, saturation: 100, blur: 0 };
+
+      function syncLabels() {
+        brightnessVal.textContent = `${brightness.value}%`;
+        contrastVal.textContent = `${contrast.value}%`;
+        saturationVal.textContent = `${saturation.value}%`;
+        blurVal.textContent = `${blur.value}px`;
+      }
+
+      function filterString() {
+        const preset = {
+          normal: { extraBrightness: 0, extraContrast: 0, extraSaturation: 0, sepia: 0, hue: 0 },
+          mono: { extraBrightness: 0, extraContrast: 10, extraSaturation: -100, sepia: 0, hue: 0 },
+          warm: { extraBrightness: 4, extraContrast: 6, extraSaturation: 12, sepia: 18, hue: -8 },
+          cool: { extraBrightness: 0, extraContrast: 8, extraSaturation: 6, sepia: 0, hue: 8 },
+          vivid: { extraBrightness: 2, extraContrast: 14, extraSaturation: 30, sepia: 0, hue: 0 }
+        }[activeFilter];
+        const b = Number(brightness.value) + preset.extraBrightness;
+        const c = Number(contrast.value) + preset.extraContrast;
+        const s = Math.max(0, Number(saturation.value) + preset.extraSaturation);
+        const bl = Number(blur.value);
+        return `brightness(${b}%) contrast(${c}%) saturate(${s}%) sepia(${preset.sepia}%) hue-rotate(${preset.hue}deg) blur(${bl}px)`;
+      }
+
+      function draw() {
+        if (!image) return;
+        const w = image.naturalWidth;
+        const h = image.naturalHeight;
+        const rotated = rotation % 180 !== 0;
+        canvas.width = rotated ? h : w;
+        canvas.height = rotated ? w : h;
+        canvas.style.aspectRatio = `${canvas.width}/${canvas.height}`;
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.filter = filterString();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(rotation * Math.PI / 180);
+        ctx.scale(flipped ? -1 : 1, 1);
+        ctx.drawImage(image, -w / 2, -h / 2, w, h);
+        ctx.restore();
+        emptyState.style.display = 'none';
+        status.textContent = `画像サイズ: ${w} × ${h} / フィルター: ${activeFilter}`;
+      }
+
+      function resetControls() {
+        brightness.value = base.brightness;
+        contrast.value = base.contrast;
+        saturation.value = base.saturation;
+        blur.value = base.blur;
+        rotation = 0;
+        flipped = false;
+        activeFilter = 'normal';
+        chips.forEach(ch => ch.classList.toggle('active', ch.dataset.filter === activeFilter));
+        syncLabels();
+      }
+
+      function loadFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+          status.textContent = '画像ファイルを選んでください。';
+          return;
+        }
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          image = img;
+          resetControls();
+          draw();
+        };
+        img.onerror = () => { status.textContent = '画像の読み込みに失敗しました。'; };
+        img.src = objectUrl;
+      }
+
+      [captureInput, galleryInput].forEach(input => {
+        input.addEventListener('change', e => loadFile(e.target.files?.[0]));
+      });
+
+      [brightness, contrast, saturation, blur].forEach(el => {
+        el.addEventListener('input', () => { syncLabels(); draw(); });
+      });
+
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          activeFilter = chip.dataset.filter;
+          chips.forEach(ch => ch.classList.toggle('active', ch === chip));
+          draw();
+        });
+      });
+
+      rotateBtn.addEventListener('click', () => { rotation = (rotation + 90) % 360; draw(); });
+      flipBtn.addEventListener('click', () => { flipped = !flipped; draw(); });
+      resetBtn.addEventListener('click', () => {
+        if (!image) return;
+        resetControls();
+        draw();
+      });
+
+      saveBtn.addEventListener('click', () => {
+        if (!image) {
+          status.textContent = '先に画像を読み込んでください。';
+          return;
+        }
+        canvas.toBlob(blob => {
+          if (!blob) {
+            status.textContent = '保存に失敗しました。';
+            return;
+          }
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `edited-photo-${Date.now()}.png`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+          status.textContent = 'PNGで保存しました。';
+        }, 'image/png');
+      });
+
+      syncLabels();
+    })();
+  </script>
+</body>
+</html>
