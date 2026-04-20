@@ -1,51 +1,270 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>プリクラ風カメラ</title>
-<style>
-  body { margin:0; background:#111; color:#fff; font-family:sans-serif; text-align:center; }
-  .wrap { position:relative; width:100vw; max-width:420px; margin:0 auto; }
-  video, canvas, img.frame { width:100%; height:auto; display:block; }
-  .stack { position:relative; }
-  img.frame { position:absolute; inset:0; pointer-events:none; }
-  button { margin:12px; padding:12px 20px; font-size:16px; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>平成プリクラ風カメラ</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: linear-gradient(180deg, #ffe7f3, #fff7fb);
+      color: #333;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #ff4da6;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .camera-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background: #000;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2);
+    }
+
+    video, canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1);
+    }
+
+    .frame {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 16px solid #ff6fb5;
+      border-radius: 20px;
+      box-sizing: border-box;
+    }
+
+    .frame::before {
+      content: "HEISEI PURIKURA";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.85);
+      color: #ff4da6;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      letter-spacing: 1px;
+    }
+
+    .stickers {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-size: 24px;
+    }
+
+    .s1 { position: absolute; top: 52px; left: 16px; }
+    .s2 { position: absolute; top: 90px; right: 18px; }
+    .s3 { position: absolute; bottom: 18px; left: 18px; }
+    .s4 { position: absolute; bottom: 20px; right: 18px; }
+
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    button, select, a {
+      font-size: 14px;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 16px;
+    }
+
+    button, a {
+      background: #ff4da6;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    select {
+      background: #fff;
+      border: 1px solid #ffc3df;
+    }
+
+    #saveBtn {
+      display: none;
+    }
+
+    #result {
+      margin-top: 18px;
+    }
+
+    #result img {
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <video id="video" autoplay playsinline></video>
-    <div class="stack">
-      anvas id="canvas" style="display:none;"></canvas>
-      <img class="frame" src="frame.png" alt="frame">
+  <div class="container">
+    <h1>平成プリクラ風カメラ</h1>
+    <p>エフェクトを選んで撮影すると、プリクラ風の画像が保存できます。</p>
+
+    <div class="camera-wrap">
+      <video id="video" autoplay playsinline></video>
+      <div class="frame"></div>
+      <div class="stickers">
+        <div class="s1">✨</div>
+        <div class="s2">💖</div>
+        <div class="s3">🌈</div>
+        <div class="s4">🫧</div>
+      </div>
     </div>
-    <button id="start">カメラ開始</button>
-    <button id="shot">撮影</button>
-    <a id="download" download="purikura.png">保存</a>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <div class="controls">
+      <button id="startBtn">カメラ開始</button>
+      <button id="shotBtn">撮影</button>
+      <select id="filterSelect">
+        <option value="normal">ノーマル</option>
+        <option value="bright">ふんわり</option>
+        <option value="pink">ピンク盛れ</option>
+        <option value="retro">平成レトロ</option>
+      </select>
+      <a id="saveBtn" href="#" download="heisei-purikura.png">保存</a>
+    </div>
+
+    <div id="result"></div>
+    <div class="note">※ 先に「カメラ開始」を押してから撮影してください。</div>
   </div>
 
-<script>
-const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const start = document.getElementById('start');
-const shot = document.getElementById('shot');
-const download = document.getElementById('download');
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const startBtn = document.getElementById("startBtn");
+    const shotBtn = document.getElementById("shotBtn");
+    const filterSelect = document.getElementById("filterSelect");
+    const saveBtn = document.getElementById("saveBtn");
+    const result = document.getElementById("result");
 
-start.onclick = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-  video.srcObject = stream;
-};
+    let stream = null;
 
-shot.onclick = () => {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const link = canvas.toDataURL('image/png');
-  download.href = link;
-  download.click();
-};
-</script>
+    startBtn.addEventListener("click", async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = stream;
+      } catch (e) {
+        alert("カメラを起動できませんでした。権限設定やHTTPS公開を確認してください。");
+      }
+    });
+
+    shotBtn.addEventListener("click", () => {
+      if (!video.videoWidth || !video.videoHeight) {
+        alert("先にカメラ開始を押してください。");
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext("2d");
+
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+
+      const selected = filterSelect.value;
+
+      if (selected === "bright") {
+        ctx.filter = "brightness(1.15) saturate(1.1) contrast(1.02)";
+      } else if (selected === "pink") {
+        ctx.filter = "brightness(1.08) saturate(1.25) contrast(1.05) hue-rotate(-8deg)";
+      } else if (selected === "retro") {
+        ctx.filter = "sepia(0.22) saturate(1.2) contrast(1.05) brightness(1.04)";
+      } else {
+        ctx.filter = "none";
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      ctx.filter = "none";
+
+      ctx.strokeStyle = "#ff6fb5";
+      ctx.lineWidth = Math.max(20, canvas.width * 0.03);
+      ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      const labelW = canvas.width * 0.48;
+      const labelH = canvas.height * 0.08;
+      const labelX = (canvas.width - labelW) / 2;
+      const labelY = canvas.height * 0.03;
+
+      roundRect(ctx, labelX, labelY, labelW, labelH, 999);
+      ctx.fill();
+
+      ctx.fillStyle = "#ff4da6";
+      ctx.font = `bold ${Math.max(20, canvas.width * 0.04)}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("HEISEI PURIKURA", canvas.width / 2, labelY + labelH / 2);
+
+      ctx.font = `${Math.max(26, canvas.width * 0.06)}px sans-serif`;
+      ctx.fillText("✨", canvas.width * 0.12, canvas.height * 0.18);
+      ctx.fillText("💖", canvas.width * 0.87, canvas.height * 0.24);
+      ctx.fillText("🌈", canvas.width * 0.12, canvas.height * 0.92);
+      ctx.fillText("🫧", canvas.width * 0.88, canvas.height * 0.90);
+
+      const imageData = canvas.toDataURL("image/png");
+      result.innerHTML = `<img src="${imageData}" alt="撮影結果">`;
+      saveBtn.href = imageData;
+      saveBtn.style.display = "inline-block";
+    });
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+  </script>
 </body>
 </html>
