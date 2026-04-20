@@ -40,7 +40,7 @@
       box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2);
     }
 
-    video, canvas {
+    video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -57,19 +57,19 @@
       box-sizing: border-box;
     }
 
-    .frame::before {
-      content: "HEISEI PURIKURA";
+    .title-badge {
       position: absolute;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(255,255,255,0.35);
+      background: rgba(255, 255, 255, 0.75);
       color: #ff4da6;
       font-weight: bold;
       font-size: 12px;
       padding: 6px 12px;
       border-radius: 999px;
       letter-spacing: 1px;
+      pointer-events: none;
     }
 
     .stickers {
@@ -79,10 +79,10 @@
       font-size: 24px;
     }
 
-    .s1 { position: absolute; top: 52px; left: 16px; }
-    .s2 { position: absolute; top: 90px; right: 18px; }
-    .s3 { position: absolute; bottom: 18px; left: 18px; }
-    .s4 { position: absolute; bottom: 20px; right: 18px; }
+    .s1 { position: absolute; top: 56px; left: 16px; }
+    .s2 { position: absolute; top: 56px; right: 16px; }
+    .s3 { position: absolute; bottom: 14px; left: 16px; }
+    .s4 { position: absolute; bottom: 14px; right: 16px; }
 
     .controls {
       margin-top: 16px;
@@ -109,6 +109,7 @@
     select {
       background: #fff;
       border: 1px solid #ffc3df;
+      color: #333;
     }
 
     #saveBtn {
@@ -140,6 +141,7 @@
     <div class="camera-wrap">
       <video id="video" autoplay playsinline></video>
       <div class="frame"></div>
+      <div class="title-badge">HEISEI PURIKURA</div>
       <div class="stickers">
         <div class="s1">✨</div>
         <div class="s2">💖</div>
@@ -150,121 +152,4 @@
 
     <canvas id="canvas" style="display:none;"></canvas>
 
-    <div class="controls">
-      <button id="startBtn">カメラ開始</button>
-      <button id="shotBtn">撮影</button>
-      <select id="filterSelect">
-        <option value="normal">ノーマル</option>
-        <option value="bright">ふんわり</option>
-        <option value="pink">ピンク盛れ</option>
-        <option value="retro">平成レトロ</option>
-      </select>
-      <a id="saveBtn" href="#" download="heisei-purikura.png">保存</a>
-    </div>
-
-    <div id="result"></div>
-    <div class="note">※ 先に「カメラ開始」を押してから撮影してください。</div>
-  </div>
-
-  <script>
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const startBtn = document.getElementById("startBtn");
-    const shotBtn = document.getElementById("shotBtn");
-    const filterSelect = document.getElementById("filterSelect");
-    const saveBtn = document.getElementById("saveBtn");
-    const result = document.getElementById("result");
-
-    let stream = null;
-
-    startBtn.addEventListener("click", async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-          audio: false
-        });
-        video.srcObject = stream;
-      } catch (e) {
-        alert("カメラを起動できませんでした。権限設定やHTTPS公開を確認してください。");
-      }
-    });
-
-    shotBtn.addEventListener("click", () => {
-      if (!video.videoWidth || !video.videoHeight) {
-        alert("先にカメラ開始を押してください。");
-        return;
-      }
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const ctx = canvas.getContext("2d");
-
-      ctx.save();
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-
-      const selected = filterSelect.value;
-
-      if (selected === "bright") {
-        ctx.filter = "brightness(1.15) saturate(1.1) contrast(1.02)";
-      } else if (selected === "pink") {
-        ctx.filter = "brightness(1.08) saturate(1.25) contrast(1.05) hue-rotate(-8deg)";
-      } else if (selected === "retro") {
-        ctx.filter = "sepia(0.22) saturate(1.2) contrast(1.05) brightness(1.04)";
-      } else {
-        ctx.filter = "none";
-      }
-
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ctx.restore();
-
-      ctx.filter = "none";
-
-      ctx.strokeStyle = "#ff6fb5";
-      ctx.lineWidth = Math.max(20, canvas.width * 0.03);
-      ctx.strokeRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
-      const labelW = canvas.width * 0.48;
-      const labelH = canvas.height * 0.08;
-      const labelX = (canvas.width - labelW) / 2;
-      const labelY = canvas.height * 0.03;
-
-      roundRect(ctx, labelX, labelY, labelW, labelH, 999);
-      ctx.fill();
-
-      ctx.fillStyle = "#ff4da6";
-      ctx.font = `bold ${Math.max(20, canvas.width * 0.04)}px sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("HEISEI PURIKURA", canvas.width / 2, labelY + labelH / 2);
-
-      ctx.font = `${Math.max(26, canvas.width * 0.06)}px sans-serif`;
-      ctx.fillText("✨", canvas.width * 0.12, canvas.height * 0.18);
-      ctx.fillText("💖", canvas.width * 0.87, canvas.height * 0.24);
-      ctx.fillText("🌈", canvas.width * 0.12, canvas.height * 0.92);
-      ctx.fillText("🫧", canvas.width * 0.88, canvas.height * 0.90);
-
-      const imageData = canvas.toDataURL("image/png");
-      result.innerHTML = `<img src="${imageData}" alt="撮影結果">`;
-      saveBtn.href = imageData;
-      saveBtn.style.display = "inline-block";
-    });
-
-    function roundRect(ctx, x, y, width, height, radius) {
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    }
-  </script>
-</body>
-</html>
+    <div 
