@@ -59,16 +59,16 @@
 
     .title-badge {
       position: absolute;
-      top: 10px;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(255, 255, 255, 0.75);
       color: #ff4da6;
-      font-weight: bold;
+      font-weight: 900;
       font-size: 12px;
-      padding: 6px 12px;
-      border-radius: 999px;
       letter-spacing: 1px;
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.6),
+        0 0 8px rgba(255,255,255,0.15);
       pointer-events: none;
     }
 
@@ -152,4 +152,5 @@
 
     <canvas id="canvas" style="display:none;"></canvas>
 
-    <div 
+    <div class="controls">
+      
