@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>かんたんカメラ</title>
+  <title>かんたんカメラ 安定版</title>
   <style>
     body {
       margin: 0;
@@ -147,8 +147,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>かんたんカメラ</h1>
-    <p>撮影したあと、編集内容がリアルタイムで反映されます。</p>
+    <h1>かんたんカメラ 安定版</h1>
+    <p>撮影後に編集内容がリアルタイムで反映されます。</p>
 
     <div class="camera-box">
       <video id="video" autoplay playsinline muted></video>
@@ -157,7 +157,7 @@
     <div class="buttons">
       <button id="startBtn" type="button">カメラ開始</button>
       <button id="shotBtn" type="button">撮影</button>
-      <a id="saveBtn" href="#" download="edited-heisei-purikura.png">保存</a>
+      <a id="saveBtn" href="#" download="edited-heisei-purikura.jpg">保存</a>
     </div>
 
     anvas id="canvas"></canvas>
@@ -179,7 +179,7 @@
       <input type="range" id="brightnessRange" min="80" max="130" value="100">
     </div>
 
-    <div class="note">※ 撮影後にモードや明るさを変えると、写真がその場で変わります。</div>
+    <div class="note">※ スマホ向けに撮影画像を少し軽くしてあります。</div>
   </div>
 
   <script>
@@ -246,7 +246,6 @@
         ctx.clearRect(0, 0, width, height);
 
         let filterText = "brightness(" + (Number(brightnessRange.value) / 100) + ")";
-
         if (editMode.value === "pink") {
           filterText += " saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
         }
@@ -257,7 +256,7 @@
 
         drawDecorations(ctx, width, height);
 
-        currentEditedData = canvas.toDataURL("image/png");
+        currentEditedData = canvas.toDataURL("image/jpeg", 0.92);
         showImage(currentEditedData);
         saveBtn.href = currentEditedData;
         saveBtn.style.display = "inline-block";
@@ -268,7 +267,11 @@
     startBtn.addEventListener("click", async function () {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
+          video: {
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 960 }
+          },
           audio: false
         });
 
@@ -291,12 +294,22 @@
 
         await waitForVideoReady();
 
-        const width = video.videoWidth;
-        const height = video.videoHeight;
+        const sourceWidth = video.videoWidth;
+        const sourceHeight = video.videoHeight;
 
-        if (!width || !height) {
+        if (!sourceWidth || !sourceHeight) {
           alert("映像の準備がまだできていません");
           return;
+        }
+
+        const maxSize = 1080;
+        let width = sourceWidth;
+        let height = sourceHeight;
+
+        if (width > maxSize || height > maxSize) {
+          const scale = Math.min(maxSize / width, maxSize / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
         }
 
         canvas.width = width;
@@ -311,7 +324,7 @@
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
 
-        originalPhotoData = canvas.toDataURL("image/png");
+        originalPhotoData = canvas.toDataURL("image/jpeg", 0.92);
 
         editorBox.style.display = "block";
         editMode.value = "normal";
