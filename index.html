@@ -164,20 +164,20 @@
       <a id="saveBtn" href="#" download="edited-heisei-purikura.png">保存</a>
     </div>
 
-    anvas id="canvas"></canvas>
+    <canvas id="canvas"></canvas>
 
     <div id="result"></div>
 
     <div id="editorBox" class="editor-box">
       <h2>編集</h2>
 
-      abel for="editMode">フィルター</label>
+      <label for="editMode">フィルター</label>
       <select id="editMode">
         <option value="normal">ノーマル</option>
         <option value="pink">ピンク</option>
       </select>
 
-      abel for="brightnessRange">
+      <label for="brightnessRange">
         明るさ: <span id="brightnessValue" class="value-text">100</span>
       </label>
       <input type="range" id="brightnessRange" min="80" max="130" value="100">
@@ -206,6 +206,7 @@
 
     let stream = null;
     let originalPhotoData = null;
+    let currentEditedData = null;
 
     brightnessRange.addEventListener("input", function () {
       brightnessValue.textContent = brightnessRange.value;
@@ -227,7 +228,25 @@
       });
     }
 
-    function drawEditedImage(imageSource, mode, brightnessPercent) {
+    function showImage(dataUrl) {
+      result.innerHTML = '<img src="' + dataUrl + '" alt="写真">';
+    }
+
+    function drawDecorations(ctx, width, height) {
+      ctx.strokeStyle = "#ff4da6";
+      ctx.lineWidth = Math.max(12, width * 0.02);
+      ctx.strokeRect(0, 0, width, height);
+
+      ctx.fillStyle = "#ff4da6";
+      ctx.font = "bold " + Math.max(24, width * 0.055) + "px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
+    }
+
+    function renderEditedFromOriginal() {
+      if (!originalPhotoData) return;
+
       const img = new Image();
       img.onload = function () {
         const width = img.width;
@@ -239,9 +258,8 @@
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, width, height);
 
-        let filterText = "brightness(" + (brightnessPercent / 100) + ")";
-
-        if (mode === "pink") {
+        let filterText = "brightness(" + (Number(brightnessRange.value) / 100) + ")";
+        if (editMode.value === "pink") {
           filterText += " saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
         }
 
@@ -249,22 +267,14 @@
         ctx.drawImage(img, 0, 0, width, height);
         ctx.filter = "none";
 
-        ctx.strokeStyle = "#ff4da6";
-        ctx.lineWidth = Math.max(12, width * 0.02);
-        ctx.strokeRect(0, 0, width, height);
+        drawDecorations(ctx, width, height);
 
-        ctx.fillStyle = "#ff4da6";
-        ctx.font = "bold " + Math.max(24, width * 0.055) + "px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
-
-        const imageData = canvas.toDataURL("image/png");
-        result.innerHTML = '<img src="' + imageData + '" alt="編集後の写真">';
-        saveBtn.href = imageData;
+        currentEditedData = canvas.toDataURL("image/png");
+        showImage(currentEditedData);
+        saveBtn.href = currentEditedData;
         saveBtn.style.display = "inline-block";
       };
-      img.src = imageSource;
+      img.src = originalPhotoData;
     }
 
     startBtn.addEventListener("click", async function () {
@@ -315,12 +325,26 @@
 
         originalPhotoData = canvas.toDataURL("image/png");
 
-        editorBox.style.display = "block";
-        editMode.value = "normal";
-        brightnessRange.value = "100";
-        brightnessValue.textContent = "100";
+        const previewImg = new Image();
+        previewImg.onload = function () {
+          canvas.width = previewImg.width;
+          canvas.height = previewImg.height;
 
-        drawEditedImage(originalPhotoData, "normal", 100);
+          const previewCtx = canvas.getContext("2d");
+          previewCtx.clearRect(0, 0, canvas.width, canvas.height);
+          previewCtx.drawImage(previewImg, 0, 0);
+          drawDecorations(previewCtx, canvas.width, canvas.height);
+
+          currentEditedData = canvas.toDataURL("image/png");
+          showImage(currentEditedData);
+          saveBtn.href = currentEditedData;
+          saveBtn.style.display = "inline-block";
+          editorBox.style.display = "block";
+          editMode.value = "normal";
+          brightnessRange.value = "100";
+          brightnessValue.textContent = "100";
+        };
+        previewImg.src = originalPhotoData;
       } catch (error) {
         alert("撮影に失敗しました");
       }
@@ -331,11 +355,7 @@
         alert("先に写真を撮影してください");
         return;
       }
-
-      const mode = editMode.value;
-      const brightness = Number(brightnessRange.value);
-
-      drawEditedImage(originalPhotoData, mode, brightness);
+      renderEditedFromOriginal();
     });
   </script>
 </body>
