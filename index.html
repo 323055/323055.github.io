@@ -59,6 +59,20 @@
       flex-wrap: wrap;
       position: relative;
       z-index: 10;
+      margin-bottom: 10px;
+    }
+
+    .mode-box {
+      margin-bottom: 12px;
+    }
+
+    select {
+      font-size: 16px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 2px solid #ff4da6;
+      background: white;
+      color: #222;
     }
 
     button, a {
@@ -108,6 +122,13 @@
       <video id="video" autoplay playsinline muted></video>
     </div>
 
+    <div class="mode-box">
+      <select id="modeSelect">
+        <option value="normal">ノーマル</option>
+        <option value="pink">ピンクモード</option>
+      </select>
+    </div>
+
     <div class="buttons">
       <button id="startBtn" type="button">カメラ開始</button>
       <button id="shotBtn" type="button">撮影</button>
@@ -117,7 +138,7 @@
     <canvas id="canvas"></canvas>
 
     <div id="result"></div>
-    <div class="note">※ 今回は保存画像にも枠と文字が入ります。</div>
+    <div class="note">※ モードは撮影時に保存画像へ反映されます。</div>
   </div>
 
   <script>
@@ -127,6 +148,7 @@
     const shotBtn = document.getElementById("shotBtn");
     const saveBtn = document.getElementById("saveBtn");
     const result = document.getElementById("result");
+    const modeSelect = document.getElementById("modeSelect");
 
     let stream = null;
 
@@ -184,14 +206,24 @@
         canvas.height = height;
 
         const ctx = canvas.getContext("2d");
-
         ctx.clearRect(0, 0, width, height);
+
+        const mode = modeSelect.value;
 
         ctx.save();
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
+
+        if (mode === "pink") {
+          ctx.filter = "brightness(1.05) saturate(1.15) hue-rotate(-8deg)";
+        } else {
+          ctx.filter = "none";
+        }
+
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
+
+        ctx.filter = "none";
 
         ctx.strokeStyle = "#ff4da6";
         ctx.lineWidth = Math.max(12, width * 0.02);
@@ -204,10 +236,7 @@
         ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
 
         const imageData = canvas.toDataURL("image/png");
-
-        result.innerHTML =
-          '<img src="' + imageData + '" alt="撮影した写真">';
-
+        result.innerHTML = '<img src="' + imageData + '" alt="撮影した写真">';
         saveBtn.href = imageData;
         saveBtn.style.display = "inline-block";
       } catch (error) {
