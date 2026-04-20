@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>プリクラ風カメラ</title>
+<style>
+  body { margin:0; background:#111; color:#fff; font-family:sans-serif; text-align:center; }
+  .wrap { position:relative; width:100vw; max-width:420px; margin:0 auto; }
+  video, canvas, img.frame { width:100%; height:auto; display:block; }
+  .stack { position:relative; }
+  img.frame { position:absolute; inset:0; pointer-events:none; }
+  button { margin:12px; padding:12px 20px; font-size:16px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <video id="video" autoplay playsinline></video>
+    <div class="stack">
+      anvas id="canvas" style="display:none;"></canvas>
+      <img class="frame" src="frame.png" alt="frame">
+    </div>
+    <button id="start">カメラ開始</button>
+    <button id="shot">撮影</button>
+    <a id="download" download="purikura.png">保存</a>
+  </div>
+
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const start = document.getElementById('start');
+const shot = document.getElementById('shot');
+const download = document.getElementById('download');
+
+start.onclick = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+  video.srcObject = stream;
+};
+
+shot.onclick = () => {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const link = canvas.toDataURL('image/png');
+  download.href = link;
+  download.click();
+};
+</script>
+</body>
+</html>
