@@ -52,8 +52,7 @@
       display: none;
     }
 
-    .mode-box,
-    .strength-box {
+    .mode-box {
       margin-bottom: 12px;
     }
 
@@ -71,11 +70,6 @@
       border: 2px solid #ff4da6;
       background: white;
       color: #222;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: #ff4da6;
     }
 
     .buttons {
@@ -124,11 +118,6 @@
       color: #666;
       margin-top: 10px;
     }
-
-    .value-text {
-      color: #ff4da6;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -141,18 +130,11 @@
     </div>
 
     <div class="mode-box">
-      <label for="modeSelect">モード</label>
+      abel for="modeSelect">モード</label>
       <select id="modeSelect">
         <option value="normal">ノーマル</option>
         <option value="pink">ピンクモード</option>
       </select>
-    </div>
-
-    <div class="strength-box">
-      <label for="strengthSlider">
-        フィルターの強さ: <span id="strengthValue" class="value-text">50</span>
-      </label>
-      <input type="range" id="strengthSlider" min="0" max="100" value="50">
     </div>
 
     <div class="buttons">
@@ -161,10 +143,10 @@
       <a id="saveBtn" href="#" download="heisei-purikura.png">保存</a>
     </div>
 
-    <canvas id="canvas"></canvas>
+    anvas id="canvas"></canvas>
 
     <div id="result"></div>
-    <div class="note">※ スライダーはピンクモードの強さに反映されます。</div>
+    <div class="note">※ ピンクモードは固定の強さです。</div>
   </div>
 
   <script>
@@ -175,14 +157,8 @@
     const saveBtn = document.getElementById("saveBtn");
     const result = document.getElementById("result");
     const modeSelect = document.getElementById("modeSelect");
-    const strengthSlider = document.getElementById("strengthSlider");
-    const strengthValue = document.getElementById("strengthValue");
 
     let stream = null;
-
-    strengthSlider.addEventListener("input", function () {
-      strengthValue.textContent = strengthSlider.value;
-    });
 
     async function waitForVideoReady() {
       if (video.readyState >= 2 && video.videoWidth > 0) return;
@@ -241,23 +217,13 @@
         ctx.clearRect(0, 0, width, height);
 
         const mode = modeSelect.value;
-        const strength = Number(strengthSlider.value) / 100;
 
         ctx.save();
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
 
         if (mode === "pink") {
-          const brightness = 1.00 + strength * 0.12;
-          const saturate = 1.00 + strength * 0.35;
-          const contrast = 1.00 + strength * 0.10;
-          const hue = -4 - strength * 12;
-
-          ctx.filter =
-            "brightness(" + brightness + ")" +
-            " saturate(" + saturate + ")" +
-            " contrast(" + contrast + ")" +
-            " hue-rotate(" + hue + "deg)";
+          ctx.filter = "brightness(1.10) saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
         } else {
           ctx.filter = "none";
         }
