@@ -84,6 +84,25 @@
       margin-top: 20px;
     }
 
+    .photo-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    .photo-title {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ff4da6;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 4px rgba(255,255,255,0.8);
+      z-index: 2;
+      pointer-events: none;
+    }
+
     #result img {
       width: 100%;
       border-radius: 16px;
@@ -114,10 +133,10 @@
       <a id="saveBtn" href="#" download="photo.png">保存</a>
     </div>
 
-    <canvas id="canvas"></canvas>
+    anvas id="canvas"></canvas>
 
     <div id="result"></div>
-    <div class="note">※ まずは壊れにくい方法でピンク枠を表示しています。</div>
+    <div class="note">※ 今回の文字は画面表示用です。</div>
   </div>
 
   <script>
@@ -192,7 +211,14 @@
         ctx.restore();
 
         const imageData = canvas.toDataURL("image/png");
-        result.innerHTML = '<img src="' + imageData + '" alt="撮影した写真">';
+
+        result.innerHTML = `
+          <div class="photo-wrap">
+            <div class="photo-title">HEISEI PURIKURA</div>
+            <img src="${imageData}" alt="撮影した写真">
+          </div>
+        `;
+
         saveBtn.href = imageData;
         saveBtn.style.display = "inline-block";
       } catch (error) {
