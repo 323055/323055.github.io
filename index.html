@@ -66,9 +66,7 @@
       font-weight: 900;
       font-size: 12px;
       letter-spacing: 1px;
-      text-shadow:
-        0 1px 0 rgba(255,255,255,0.6),
-        0 0 8px rgba(255,255,255,0.15);
+      text-shadow: 0 1px 4px rgba(255,255,255,0.7);
       pointer-events: none;
     }
 
@@ -124,12 +122,17 @@
       width: 100%;
       border-radius: 20px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      display: block;
     }
 
     .note {
       font-size: 12px;
       color: #777;
       margin-top: 10px;
+    }
+
+    canvas {
+      display: none;
     }
   </style>
 </head>
@@ -139,18 +142,4 @@
     <p>エフェクトを選んで撮影すると、プリクラ風の画像が保存できます。</p>
 
     <div class="camera-wrap">
-      <video id="video" autoplay playsinline></video>
-      <div class="frame"></div>
-      <div class="title-badge">HEISEI PURIKURA</div>
-      <div class="stickers">
-        <div class="s1">✨</div>
-        <div class="s2">💖</div>
-        <div class="s3">🌈</div>
-        <div class="s4">🫧</div>
-      </div>
-    </div>
-
-    <canvas id="canvas" style="display:none;"></canvas>
-
-    <div class="controls">
-      
+      <video id="video" 
