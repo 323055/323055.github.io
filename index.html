@@ -52,24 +52,46 @@
       display: none;
     }
 
-    .mode-box {
-      margin-bottom: 12px;
+    .editor-box {
+      margin-top: 16px;
+      padding: 14px;
+      background: #fff;
+      border-radius: 16px;
+      border: 2px solid #ffd1e8;
+      display: none;
+      text-align: left;
     }
 
-    label {
+    .editor-box h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #ff4da6;
+      text-align: center;
+    }
+
+    .editor-box label {
       display: block;
       font-size: 14px;
-      margin-bottom: 6px;
       font-weight: bold;
+      margin-top: 12px;
+      margin-bottom: 6px;
     }
 
-    select {
+    .editor-box select,
+    .editor-box input[type="range"] {
+      width: 100%;
+    }
+
+    .editor-box select {
       font-size: 16px;
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 12px;
       border: 2px solid #ff4da6;
-      background: white;
-      color: #222;
+      background: #fff;
+    }
+
+    .editor-box input[type="range"] {
+      accent-color: #ff4da6;
     }
 
     .buttons {
@@ -77,8 +99,6 @@
       gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
-      position: relative;
-      z-index: 10;
       margin-top: 14px;
     }
 
@@ -95,6 +115,10 @@
       -webkit-appearance: none;
       appearance: none;
       touch-action: manipulation;
+    }
+
+    .sub-button {
+      background: #ff85bf;
     }
 
     #saveBtn {
@@ -118,35 +142,52 @@
       color: #666;
       margin-top: 10px;
     }
+
+    .value-text {
+      color: #ff4da6;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>かんたんカメラ</h1>
-    <p>写真にピンクの枠と文字を入れて保存します。</p>
+    <p>撮影したあとに編集して、編集後の写真を保存できます。</p>
 
     <div class="camera-box">
       <video id="video" autoplay playsinline muted></video>
     </div>
 
-    <div class="mode-box">
-      abel for="modeSelect">モード</label>
-      <select id="modeSelect">
-        <option value="normal">ノーマル</option>
-        <option value="pink">ピンクモード</option>
-      </select>
-    </div>
-
     <div class="buttons">
       <button id="startBtn" type="button">カメラ開始</button>
       <button id="shotBtn" type="button">撮影</button>
-      <a id="saveBtn" href="#" download="heisei-purikura.png">保存</a>
+      <a id="saveBtn" href="#" download="edited-heisei-purikura.png">保存</a>
     </div>
 
     anvas id="canvas"></canvas>
 
     <div id="result"></div>
-    <div class="note">※ ピンクモードは固定の強さです。</div>
+
+    <div id="editorBox" class="editor-box">
+      <h2>編集</h2>
+
+      abel for="editMode">フィルター</label>
+      <select id="editMode">
+        <option value="normal">ノーマル</option>
+        <option value="pink">ピンク</option>
+      </select>
+
+      abel for="brightnessRange">
+        明るさ: <span id="brightnessValue" class="value-text">100</span>
+      </label>
+      <input type="range" id="brightnessRange" min="80" max="130" value="100">
+
+      <div class="buttons">
+        <button id="applyEditBtn" type="button" class="sub-button">編集を反映</button>
+      </div>
+    </div>
+
+    <div class="note">※ まず撮影してから編集してください。</div>
   </div>
 
   <script>
@@ -156,9 +197,19 @@
     const shotBtn = document.getElementById("shotBtn");
     const saveBtn = document.getElementById("saveBtn");
     const result = document.getElementById("result");
-    const modeSelect = document.getElementById("modeSelect");
+
+    const editorBox = document.getElementById("editorBox");
+    const editMode = document.getElementById("editMode");
+    const brightnessRange = document.getElementById("brightnessRange");
+    const brightnessValue = document.getElementById("brightnessValue");
+    const applyEditBtn = document.getElementById("applyEditBtn");
 
     let stream = null;
+    let originalPhotoData = null;
+
+    brightnessRange.addEventListener("input", function () {
+      brightnessValue.textContent = brightnessRange.value;
+    });
 
     async function waitForVideoReady() {
       if (video.readyState >= 2 && video.videoWidth > 0) return;
@@ -174,6 +225,46 @@
         video.addEventListener("loadedmetadata", check);
         video.addEventListener("canplay", check);
       });
+    }
+
+    function drawEditedImage(imageSource, mode, brightnessPercent) {
+      const img = new Image();
+      img.onload = function () {
+        const width = img.width;
+        const height = img.height;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, width, height);
+
+        let filterText = "brightness(" + (brightnessPercent / 100) + ")";
+
+        if (mode === "pink") {
+          filterText += " saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
+        }
+
+        ctx.filter = filterText;
+        ctx.drawImage(img, 0, 0, width, height);
+        ctx.filter = "none";
+
+        ctx.strokeStyle = "#ff4da6";
+        ctx.lineWidth = Math.max(12, width * 0.02);
+        ctx.strokeRect(0, 0, width, height);
+
+        ctx.fillStyle = "#ff4da6";
+        ctx.font = "bold " + Math.max(24, width * 0.055) + "px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
+
+        const imageData = canvas.toDataURL("image/png");
+        result.innerHTML = '<img src="' + imageData + '" alt="編集後の写真">';
+        saveBtn.href = imageData;
+        saveBtn.style.display = "inline-block";
+      };
+      img.src = imageSource;
     }
 
     startBtn.addEventListener("click", async function () {
@@ -216,40 +307,35 @@
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, width, height);
 
-        const mode = modeSelect.value;
-
         ctx.save();
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
-
-        if (mode === "pink") {
-          ctx.filter = "brightness(1.10) saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
-        } else {
-          ctx.filter = "none";
-        }
-
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
 
-        ctx.filter = "none";
+        originalPhotoData = canvas.toDataURL("image/png");
 
-        ctx.strokeStyle = "#ff4da6";
-        ctx.lineWidth = Math.max(12, width * 0.02);
-        ctx.strokeRect(0, 0, width, height);
+        editorBox.style.display = "block";
+        editMode.value = "normal";
+        brightnessRange.value = "100";
+        brightnessValue.textContent = "100";
 
-        ctx.fillStyle = "#ff4da6";
-        ctx.font = "bold " + Math.max(24, width * 0.055) + "px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
-
-        const imageData = canvas.toDataURL("image/png");
-        result.innerHTML = '<img src="' + imageData + '" alt="撮影した写真">';
-        saveBtn.href = imageData;
-        saveBtn.style.display = "inline-block";
+        drawEditedImage(originalPhotoData, "normal", 100);
       } catch (error) {
         alert("撮影に失敗しました");
       }
+    });
+
+    applyEditBtn.addEventListener("click", function () {
+      if (!originalPhotoData) {
+        alert("先に写真を撮影してください");
+        return;
+      }
+
+      const mode = editMode.value;
+      const brightness = Number(brightnessRange.value);
+
+      drawEditedImage(originalPhotoData, mode, brightness);
     });
   </script>
 </body>
