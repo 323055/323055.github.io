@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>かんたんカメラ 安定版</title>
+  <title>かんたんカメラ 超安全版</title>
   <style>
     body {
       margin: 0;
@@ -91,64 +91,18 @@
       box-sizing: border-box;
     }
 
-    .editor-box {
-      margin-top: 16px;
-      padding: 14px;
-      background: #fff;
-      border-radius: 16px;
-      border: 2px solid #ffd1e8;
-      display: none;
-      text-align: left;
-    }
-
-    .editor-box h2 {
-      margin-top: 0;
-      font-size: 18px;
-      color: #ff4da6;
-      text-align: center;
-    }
-
-    .editor-box label {
-      display: block;
-      font-size: 14px;
-      font-weight: bold;
-      margin-top: 12px;
-      margin-bottom: 6px;
-    }
-
-    .editor-box select,
-    .editor-box input[type="range"] {
-      width: 100%;
-    }
-
-    .editor-box select {
-      font-size: 16px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 2px solid #ff4da6;
-      background: #fff;
-    }
-
-    .editor-box input[type="range"] {
-      accent-color: #ff4da6;
-    }
-
     .note {
       font-size: 12px;
       color: #666;
       margin-top: 10px;
-    }
-
-    .value-text {
-      color: #ff4da6;
-      font-weight: bold;
+      white-space: pre-line;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>かんたんカメラ 安定版</h1>
-    <p>撮影後に編集内容がリアルタイムで反映されます。</p>
+    <h1>かんたんカメラ 超安全版</h1>
+    <p>まずは撮影できるかだけ確認する版です。</p>
 
     <div class="camera-box">
       <video id="video" autoplay playsinline muted></video>
@@ -157,29 +111,13 @@
     <div class="buttons">
       <button id="startBtn" type="button">カメラ開始</button>
       <button id="shotBtn" type="button">撮影</button>
-      <a id="saveBtn" href="#" download="edited-heisei-purikura.jpg">保存</a>
+      <a id="saveBtn" href="#" download="camera-photo.jpg">保存</a>
     </div>
 
     anvas id="canvas"></canvas>
 
     <div id="result"></div>
-
-    <div id="editorBox" class="editor-box">
-      <h2>編集</h2>
-
-      abel for="editMode">フィルター</label>
-      <select id="editMode">
-        <option value="normal">ノーマル</option>
-        <option value="pink">ピンク</option>
-      </select>
-
-      abel for="brightnessRange">
-        明るさ: <span id="brightnessValue" class="value-text">100</span>
-      </label>
-      <input type="range" id="brightnessRange" min="80" max="130" value="100">
-    </div>
-
-    <div class="note">※ スマホ向けに撮影画像を少し軽くしてあります。</div>
+    <div id="note" class="note">準備中</div>
   </div>
 
   <script>
@@ -189,89 +127,49 @@
     const shotBtn = document.getElementById("shotBtn");
     const saveBtn = document.getElementById("saveBtn");
     const result = document.getElementById("result");
-
-    const editorBox = document.getElementById("editorBox");
-    const editMode = document.getElementById("editMode");
-    const brightnessRange = document.getElementById("brightnessRange");
-    const brightnessValue = document.getElementById("brightnessValue");
+    const note = document.getElementById("note");
 
     let stream = null;
-    let originalPhotoData = null;
-    let currentEditedData = null;
+
+    function setNote(text) {
+      note.textContent = text;
+    }
 
     async function waitForVideoReady() {
       if (video.readyState >= 2 && video.videoWidth > 0) return;
 
-      await new Promise((resolve) => {
-        const check = () => {
+      await new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error("video-timeout"));
+        }, 5000);
+
+        function done() {
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            video.removeEventListener("loadedmetadata", check);
-            video.removeEventListener("canplay", check);
+            cleanup();
             resolve();
           }
-        };
-        video.addEventListener("loadedmetadata", check);
-        video.addEventListener("canplay", check);
-      });
-    }
-
-    function showImage(dataUrl) {
-      result.innerHTML = '<img src="' + dataUrl + '" alt="写真">';
-    }
-
-    function drawDecorations(ctx, width, height) {
-      ctx.strokeStyle = "#ff4da6";
-      ctx.lineWidth = Math.max(12, width * 0.02);
-      ctx.strokeRect(0, 0, width, height);
-
-      ctx.fillStyle = "#ff4da6";
-      ctx.font = "bold " + Math.max(24, width * 0.055) + "px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText("HEISEI PURIKURA", width / 2, Math.max(12, height * 0.03));
-    }
-
-    function renderEditedFromOriginal() {
-      if (!originalPhotoData) return;
-
-      const img = new Image();
-      img.onload = function () {
-        const width = img.width;
-        const height = img.height;
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, width, height);
-
-        let filterText = "brightness(" + (Number(brightnessRange.value) / 100) + ")";
-        if (editMode.value === "pink") {
-          filterText += " saturate(1.28) contrast(1.08) hue-rotate(-14deg)";
         }
 
-        ctx.filter = filterText;
-        ctx.drawImage(img, 0, 0, width, height);
-        ctx.filter = "none";
+        function cleanup() {
+          clearTimeout(timeoutId);
+          video.removeEventListener("loadedmetadata", done);
+          video.removeEventListener("canplay", done);
+          video.removeEventListener("playing", done);
+        }
 
-        drawDecorations(ctx, width, height);
-
-        currentEditedData = canvas.toDataURL("image/jpeg", 0.92);
-        showImage(currentEditedData);
-        saveBtn.href = currentEditedData;
-        saveBtn.style.display = "inline-block";
-      };
-      img.src = originalPhotoData;
+        video.addEventListener("loadedmetadata", done);
+        video.addEventListener("canplay", done);
+        video.addEventListener("playing", done);
+      });
     }
 
     startBtn.addEventListener("click", async function () {
       try {
+        setNote("カメラの許可を確認しています…");
+
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "user",
-            width: { ideal: 1280 },
-            height: { ideal: 960 }
-          },
+          video: true,
           audio: false
         });
 
@@ -279,8 +177,9 @@
         await video.play();
         await waitForVideoReady();
 
-        alert("カメラを開始しました");
+        setNote("カメラ開始成功。映像が見えたら撮影してください。");
       } catch (error) {
+        setNote("カメラ開始失敗: " + error.name + " / " + error.message);
         alert("カメラを起動できませんでした");
       }
     });
@@ -288,6 +187,7 @@
     shotBtn.addEventListener("click", async function () {
       try {
         if (!stream) {
+          setNote("まだカメラ開始していません。");
           alert("先にカメラ開始を押してください");
           return;
         }
@@ -298,19 +198,13 @@
         const sourceHeight = video.videoHeight;
 
         if (!sourceWidth || !sourceHeight) {
+          setNote("videoWidth か videoHeight が 0 です。");
           alert("映像の準備がまだできていません");
           return;
         }
 
-        const maxSize = 1080;
-        let width = sourceWidth;
-        let height = sourceHeight;
-
-        if (width > maxSize || height > maxSize) {
-          const scale = Math.min(maxSize / width, maxSize / height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
+        const width = 320;
+        const height = Math.round(sourceHeight / (sourceWidth / width));
 
         canvas.width = width;
         canvas.height = height;
@@ -324,29 +218,16 @@
         ctx.drawImage(video, 0, 0, width, height);
         ctx.restore();
 
-        originalPhotoData = canvas.toDataURL("image/jpeg", 0.92);
+        const imageData = canvas.toDataURL("image/jpeg", 0.9);
 
-        editorBox.style.display = "block";
-        editMode.value = "normal";
-        brightnessRange.value = "100";
-        brightnessValue.textContent = "100";
+        result.innerHTML = '<img src="' + imageData + '" alt="撮影した写真">';
+        saveBtn.href = imageData;
+        saveBtn.style.display = "inline-block";
 
-        renderEditedFromOriginal();
+        setNote("撮影成功。保存ボタンも使えます。");
       } catch (error) {
+        setNote("撮影失敗: " + error.name + " / " + error.message);
         alert("撮影に失敗しました");
-      }
-    });
-
-    editMode.addEventListener("change", function () {
-      if (originalPhotoData) {
-        renderEditedFromOriginal();
-      }
-    });
-
-    brightnessRange.addEventListener("input", function () {
-      brightnessValue.textContent = brightnessRange.value;
-      if (originalPhotoData) {
-        renderEditedFromOriginal();
       }
     });
   </script>
