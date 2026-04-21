@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>heisei-galakei-adjust</title>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--p:#ff4fa3;--a:#74dcff;--v:#a98fff;--y:#fff06d;--panel:rgba(26,22,30,.92);--text:#f6eefa;--muted:#c6b8cb;--shadow:0 18px 40px rgba(0,0,0,.35)}
+    *{box-sizing:border-box} body{margin:0;min-height:100dvh;font-family:'M PLUS Rounded 1c',system-ui,sans-serif;background:linear-gradient(160deg,#0f0d12 0%,#17131b 50%,#0d0b10 100%);color:var(--text);padding:18px} button,input{font:inherit} button{border:0;background:none;color:inherit;cursor:pointer}
+    .wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+    .hero,.card,.phone{border-radius:28px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.09)}
+    .hero{padding:24px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,255,.02)),linear-gradient(140deg,rgba(255,75,152,.18),rgba(156,124,255,.12));position:relative;overflow:hidden}
+    .hero::after{content:'';position:absolute;inset:12px;border:1px solid rgba(255,255,255,.08);border-radius:22px;pointer-events:none}
+    h1{margin:0 0 10px;font-size:clamp(2.2rem,1.2rem + 3.8vw,4.6rem);line-height:.98;color:#fff;text-shadow:0 0 18px rgba(255,75,152,.24)}
+    .lead{max-width:60ch;color:var(--muted)}
+    .layout{display:grid;gap:18px}
+    .card{background:linear-gradient(180deg,rgba(26,22,30,.92),rgba(35,28,40,.9));padding:18px}
+    .section-title{font-size:1.08rem;margin:0 0 10px}.sub{color:var(--muted);font-size:.92rem;margin:0 0 12px}
+    .picker,.toolbar,.option-row{display:flex;flex-wrap:wrap;gap:10px}
+    .main-btn,.sub-btn,.select-btn{min-height:46px;padding:0 16px;border-radius:999px;font-weight:700}
+    .main-btn{background:linear-gradient(135deg,var(--p),#ff82bd);color:#fff}.sub-btn,.select-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+    .active{background:linear-gradient(135deg,rgba(255,75,152,.24),rgba(156,124,255,.22));border-color:rgba(255,134,187,.45)}
+    input[type=file]{display:none}.slider-grid{display:grid;gap:12px}.slider-box{display:grid;gap:6px}.slider-line{display:flex;justify-content:space-between;gap:10px;font-size:.94rem} input[type=range]{width:100%;accent-color:var(--p)}
+    .phone{background:linear-gradient(180deg,rgba(44,34,52,.95),rgba(20,16,24,.98));padding:18px;position:relative}
+    .screen-wrap{border-radius:24px;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08)}
+    .statusbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:.8rem;color:#f0b5d0;font-weight:700}.signal{display:flex;gap:3px;align-items:flex-end}.signal span{width:4px;background:var(--p);border-radius:4px 4px 0 0}.signal span:nth-child(1){height:8px}.signal span:nth-child(2){height:12px}.signal span:nth-child(3){height:16px}.signal span:nth-child(4){height:20px}
+    .lcd{position:relative;min-height:400px;display:grid;place-items:center;overflow:hidden;border-radius:20px;background:linear-gradient(145deg,#1b171f 0%,#221d29 100%);border:1px solid rgba(255,255,255,.08)}
+    .lcd::before{content:'GAL MODE / ADJUST';position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:6px 12px;border-radius:999px;font-size:.76rem;letter-spacing:.08em;font-weight:800;color:#ffd2e5;background:rgba(255,75,152,.14);border:1px solid rgba(255,134,187,.22)}
+    canvas{display:block;max-width:100%;height:auto;border-radius:18px;background:#0b0b0f}
+    .empty{text-align:center;color:#d7cbda;padding:78px 18px 18px}.empty strong{display:block;font-size:1.18rem;margin-bottom:6px;color:#fff}
+    .savebar{display:flex;justify-content:center;margin-top:14px}.savebtn{min-height:52px;padding:0 22px;border-radius:999px;font-weight:900;background:linear-gradient(135deg,var(--p),#ff82bd);color:#fff;box-shadow:0 10px 24px rgba(255,79,163,.35)}
+    .keypad{margin-top:16px;display:grid;gap:12px}.nav-ring{width:126px;height:126px;margin:0 auto;border-radius:999px;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.16),rgba(255,75,152,.12) 55%,rgba(255,75,152,.06) 100%);border:1px solid rgba(255,255,255,.12);position:relative}.nav-ring::before,.nav-ring::after{content:'';position:absolute;inset:26px;border-radius:999px;border:1px solid rgba(255,255,255,.12)}.nav-ok{position:absolute;inset:42px;border-radius:999px;display:grid;place-items:center;font-weight:900;background:linear-gradient(135deg,var(--p),#ff6cae);color:#fff}
+    .key-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.key{min-height:54px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);font-weight:800;color:#f2d4e3}
+    .preview-list{display:grid;gap:10px;margin-top:12px}.preview-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.preview-swatch{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:900;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}.sw1{background:linear-gradient(135deg,#ff4fa3,#ff82bd)}.sw2{background:linear-gradient(135deg,#a98fff,#74dcff)}.sw3{background:linear-gradient(135deg,#fff06d,#ff82bd)}.sw4{background:linear-gradient(135deg,#fff,#ffd7ec)}
+    .preview-text{display:grid}.preview-text b{font-size:1rem}.preview-text span{font-size:.86rem;color:var(--muted)}
+    @media (min-width:980px){.layout{grid-template-columns:370px 1fr;align-items:start}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero"><h1>ガラケープリ<br>エディタ</h1><p class="lead">フレームの違いが一目でわかるように、左にプレビューを付けた版です。今回は明るさ・コントラスト・彩度の調整も追加しています。</p></header>
+  <main class="layout">
+    <section class="card">
+      <h2 class="section-title">写真を入れる</h2><p class="sub">スマホで撮影・選択できる形式です。</p>
+      <div class="picker"><label class="main-btn" for="captureInput">📸 撮る / 選ぶ</label><label class="sub-btn" for="galleryInput">🖼️ アルバム</label></div>
+      <input id="captureInput" type="file" accept="image/*" capture="environment"><input id="galleryInput" type="file" accept="image/*">
+      <h2 class="section-title" style="margin-top:16px">明るさ / コントラスト / 彩度</h2>
+      <div class="slider-grid">
+        <div class="slider-box"><div class="slider-line"><span>明るさ</span><span id="brightnessVal">100</span></div><input id="brightness" type="range" min="50" max="150" value="100"></div>
+        <div class="slider-box"><div class="slider-line"><span>コントラスト</span><span id="contrastVal">100</span></div><input id="contrast" type="range" min="50" max="180" value="100"></div>
+        <div class="slider-box"><div class="slider-line"><span>彩度</span><span id="saturationVal">100</span></div><input id="saturation" type="range" min="0" max="200" value="100"></div>
+      </div>
+      <h2 class="section-title" style="margin-top:16px">フレーム</h2>
+      <div class="option-row" id="frameBar"><button class="select-btn active" data-frame="deco" type="button">デコ</button><button class="select-btn" data-frame="pixel" type="button">ピクセル</button><button class="select-btn" data-frame="check" type="button">チェック</button><button class="select-btn" data-frame="lace" type="button">レース</button></div>
+      <div class="preview-list"><div class="preview-item"><div class="preview-swatch sw1">♡</div><div class="preview-text"><b>デコ</b><span>太ピンク線・ハート多め</span></div></div><div class="preview-item"><div class="preview-swatch sw2">✦</div><div class="preview-text"><b>ピクセル</b><span>紫線・角ばった星</span></div></div><div class="preview-item"><div class="preview-swatch sw3">▦</div><div class="preview-text"><b>チェック</b><span>プロフ帳っぽい格子柄</span></div></div><div class="preview-item"><div class="preview-swatch sw4">◎</div><div class="preview-text"><b>レース</b><span>白縁・やわらかい花飾り</span></div></div></div>
+      <h2 class="section-title" style="margin-top:16px">スタンプ</h2>
+      <div class="option-row" id="stampBar"><button class="select-btn active" data-stamp="yujo" type="button">友情</button><button class="select-btn" data-stamp="soushi" type="button">相思</button><button class="select-btn" data-stamp="bunkasai" type="button">文化祭</button><button class="select-btn" data-stamp="nakayoshi" type="button">なかよし</button></div>
+      <div class="preview-list"><div class="preview-item"><div class="preview-swatch sw1">友</div><div class="preview-text"><b>友情永久不滅</b><span>ピンク・太字・白縁取り</span></div></div><div class="preview-item"><div class="preview-swatch sw2">相</div><div class="preview-text"><b>相思相愛</b><span>水色・読みやすい配置</span></div></div><div class="preview-item"><div class="preview-swatch sw3">祭</div><div class="preview-text"><b>文化祭 2026</b><span>紫・大きめ</span></div></div><div class="preview-item"><div class="preview-swatch sw4">☆</div><div class="preview-text"><b>なかよしMAX</b><span>黄色・黒縁でくっきり</span></div></div></div>
+    </section>
+    <section class="phone">
+      <div class="screen-wrap">
+        <div class="statusbar"><div class="signal"><span></span><span></span><span></span><span></span></div><div>2007/09/15 Sat</div><div>mail 2</div></div>
+        <div class="lcd"><canvas id="canvas"></canvas><div class="empty" id="emptyState"><strong>画像を入れてね</strong>ここにプレビューが出るよ。</div></div>
+        <div class="savebar"><button class="savebtn" id="saveBtn" type="button">💾 保存</button></div>
+        <p class="sub" id="status" style="margin:10px 0 0">まだ画像が読み込まれていません。</p>
+      </div>
+      <div class="keypad"><div class="nav-ring"><div class="nav-ok">OK</div></div><div class="key-grid"><button class="key" type="button">1</button><button class="key" type="button">2 ABC</button><button class="key" type="button">3 DEF</button><button class="key" type="button">4 GHI</button><button class="key" type="button">5 JKL</button><button class="key" type="button">6 MNO</button><button class="key" type="button">7 PQRS</button><button class="key" type="button">8 TUV</button><button class="key" type="button">9 WXYZ</button></div></div>
+    </section>
+  </main>
+</div>
+<script>
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+const emptyState=document.getElementById('emptyState'),status=document.getElementById('status');
+const captureInput=document.getElementById('captureInput'),galleryInput=document.getElementById('galleryInput');
+const saveBtn=document.getElementById('saveBtn');
+const brightness=document.getElementById('brightness'),contrast=document.getElementById('contrast'),saturation=document.getElementById('saturation');
+const brightnessVal=document.getElementById('brightnessVal'),contrastVal=document.getElementById('contrastVal'),saturationVal=document.getElementById('saturationVal');
+const frameButtons=[...document.querySelectorAll('#frameBar button')], stampButtons=[...document.querySelectorAll('#stampBar button')];
+let image=null,objectUrl=null,frame='deco',stamp='yujo';
+function sync(){brightnessVal.textContent=brightness.value;contrastVal.textContent=contrast.value;saturationVal.textContent=saturation.value}
+function drawHeart(x,y,s,c){ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-s,y-s,x-s*1.8,y+s*0.7,x,y+s*1.8);ctx.bezierCurveTo(x+s*1.8,y+s*0.7,x+s,y-s,x,y);ctx.fill();}
+function drawPixelStar(x,y,size,c){ctx.fillStyle=c;const px=size/5,blocks=[[2,0],[2,1],[0,2],[1,2],[2,2],[3,2],[4,2],[2,3],[2,4]];blocks.forEach(([bx,by])=>ctx.fillRect(x+bx*px,y+by*px,px,px));}
+function drawFrame(w,h){ctx.save();ctx.lineCap='round';ctx.lineJoin='round';if(frame==='deco'){ctx.strokeStyle='#ff4fa3';ctx.lineWidth=24;ctx.strokeRect(20,20,w-40,h-40);for(let i=0;i<8;i++){const x=30+i*((w-60)/7);drawHeart(x,35,14,'#ff7bc2');drawHeart(x,h-35,14,'#5bd9f0')}}else if(frame==='pixel'){ctx.strokeStyle='#a98fff';ctx.lineWidth=16;ctx.strokeRect(18,18,w-36,h-36);for(let i=0;i<10;i++){const x=25+i*((w-50)/9);drawPixelStar(x,25,16,'#74dcff');drawPixelStar(x,h-41,16,'#74dcff')}}else if(frame==='check'){for(let x=0;x<w;x+=32){for(let y=0;y<h;y+=32){if(x<40||y<40||x>w-56||y>h-56){ctx.fillStyle=((x+y)/32)%2===0?'#ff4fa3':'#74dcff';ctx.fillRect(x,y,32,32)}}}ctx.strokeStyle='#fff';ctx.lineWidth=12;ctx.strokeRect(16,16,w-32,h-32)}else if(frame==='lace'){ctx.strokeStyle='#ff82bd';ctx.lineWidth=14;ctx.strokeRect(18,18,w-36,h-36);for(let i=0;i<6;i++){const x=28+i*((w-56)/5);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,28,10,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x,h-28,10,0,Math.PI*2);ctx.fill();}}ctx.restore();}
+function drawStamp(w,h){ctx.save();ctx.font='900 38px "M PLUS Rounded 1c", sans-serif';ctx.lineWidth=6;ctx.lineJoin='round';let text='',color='#ff4fa3';if(stamp==='yujo'){text='友情永久不滅';color='#ff4fa3'}else if(stamp==='soushi'){text='相思相愛';color='#74dcff'}else if(stamp==='bunkasai'){text='文化祭 2026';color='#a98fff'}else if(stamp==='nakayoshi'){text='なかよしMAX';color='#fff06d'}ctx.shadowColor='rgba(0,0,0,.65)';ctx.shadowBlur=6;ctx.strokeStyle='#000';ctx.strokeText(text,w*0.1,h*0.9);ctx.shadowBlur=0;ctx.fillStyle=color;ctx.fillText(text,w*0.1,h*0.9);ctx.restore();}
+function applyFilter(){const b=brightness.value,c=contrast.value,s=saturation.value;ctx.filter=`brightness(${b}%) contrast(${c}%) saturate(${s}%)`}
+function draw(){if(!image)return;const w=image.naturalWidth,h=image.naturalHeight;canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);applyFilter();ctx.drawImage(image,0,0);ctx.filter='none';drawFrame(w,h);drawStamp(w,h);emptyState.style.display='none';status.textContent=`画像サイズ: ${w} × ${h} / 明るさ:${brightness.value} / コントラスト:${contrast.value} / 彩度:${saturation.value}`;}
+frameButtons.forEach(btn=>btn.onclick=()=>{frame=btn.dataset.frame;frameButtons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');draw();});
+stampButtons.forEach(btn=>btn.onclick=()=>{stamp=btn.dataset.stamp;stampButtons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');draw();});
+[brightness,contrast,saturation].forEach(el=>el.oninput=()=>{sync();draw();});
+[captureInput,galleryInput].forEach(inp=>inp.onchange=e=>{const file=e.target.files?.[0];if(!file||!file.type.startsWith('image/'))return;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(file);const img=new Image();img.onload=()=>{image=img;draw();};img.src=objectUrl;});
+saveBtn.onclick=()=>{if(!image)return;canvas.toBlob(blob=>{if(!blob)return;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='heisei-galakei.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);},'image/png');};
+sync();
+</script>
+</body>
+</html>
