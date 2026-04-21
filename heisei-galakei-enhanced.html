@@ -1,0 +1,168 @@
+
+&lt;!doctype html&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;utf-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,viewport-fit=cover&quot;&gt;
+  &lt;title&gt;heisei-galakei-enhanced&lt;/title&gt;
+  &lt;link href=&quot;https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;script&gt;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let image = null;
+let rotation = 0;
+let flipped = false;
+let frame = 'deco';
+let stamp = 'yujo';
+
+function drawFrame(w, h) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // デコフレーム: 太いピンク線 + 大きなハート
+  if (frame === 'deco') {
+    ctx.strokeStyle = '#ff4fa3';
+    ctx.lineWidth = 24;
+    ctx.strokeRect(20, 20, w - 40, h - 40);
+    ctx.fillStyle = '#ff4fa3';
+    for (let i = 0; i &lt; 8; i++) {
+      const x = 30 + i * ((w - 60) / 7);
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('♡', x, 35);
+      ctx.fillText('♡', x, h - 35);
+    }
+  }
+
+  // ピクセルフレーム: 紫 + ピクセル星
+  else if (frame === 'pixel') {
+    ctx.strokeStyle = '#a98fff';
+    ctx.lineWidth = 16;
+    ctx.strokeRect(18, 18, w - 36, h - 36);
+    ctx.fillStyle = '#74dcff';
+    for (let i = 0; i &lt; 10; i++) {
+      const x = 25 + i * ((w - 50) / 9);
+      ctx.fillRect(x, 25, 12, 12);
+      ctx.fillRect(x, h - 37, 12, 12);
+    }
+  }
+
+  // チェックフレーム: カラーチェッカー
+  else if (frame === 'check') {
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = '#fff';
+    ctx.strokeRect(16, 16, w - 32, h - 32);
+    for (let x = 20; x &lt; w - 20; x += 28) {
+      for (let y = 20; y &lt; h - 20; y += 28) {
+        ctx.fillStyle = ((x + y) / 28) % 2 === 0 ? '#ff4fa3' : '#74dcff';
+        ctx.fillRect(x, y, 28, 28);
+      }
+    }
+  }
+
+  // レースフレーム: 曲線 + 花
+  else if (frame === 'lace') {
+    ctx.strokeStyle = '#ff82bd';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(18, 18, w - 36, h - 36);
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i &lt; 6; i++) {
+      const x = 28 + i * ((w - 56) / 5);
+      ctx.beginPath();
+      ctx.arc(x, 28, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, h - 28, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawStamp(w, h) {
+  ctx.save();
+  ctx.font = 'bold 36px sans-serif';
+  ctx.lineWidth = 4;
+  ctx.lineJoin = 'round';
+
+  let text = '';
+  let color = '#ff4fa3';
+  let shadowColor = '#fff';
+
+  if (stamp === 'yujo') {
+    text = '友情永久不滅';
+    color = '#ff4fa3';
+  } else if (stamp === 'soushi') {
+    text = '相思相愛';
+    color = '#74dcff';
+  } else if (stamp === 'bunkasai') {
+    text = '文化祭 2026';
+    color = '#a98fff';
+  } else if (stamp === 'nakayoshi') {
+    text = 'なかよしMAX';
+    color = '#fff06d';
+  }
+
+  if (text) {
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText(text, w * 0.1, h * 0.9);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = color;
+    ctx.fillText(text, w * 0.1, h * 0.9);
+  }
+
+  ctx.restore();
+}
+
+function draw() {
+  if (!image) return;
+  const w = image.naturalWidth;
+  const h = image.naturalHeight;
+  canvas.width = w;
+  canvas.height = h;
+  ctx.clearRect(0, 0, w, h);
+  ctx.drawImage(image, 0, 0);
+  drawFrame(w, h);
+  drawStamp(w, h);
+}
+
+// ボタンクリック処理
+document.querySelectorAll('[data-frame]').forEach(btn => {
+  btn.onclick = () => {
+    frame = btn.dataset.frame;
+    document.querySelectorAll('[data-frame]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    draw();
+  };
+});
+
+document.querySelectorAll('[data-stamp]').forEach(btn => {
+  btn.onclick = () => {
+    stamp = btn.dataset.stamp;
+    document.querySelectorAll('[data-stamp]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    draw();
+  };
+});
+
+// ファイル読み込み
+document.getElementById('fileInput').onchange = e => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      image = new Image();
+      image.onload = draw;
+      image.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
